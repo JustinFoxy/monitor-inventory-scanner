@@ -3,28 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>显示器扫码盘点工具</title>
+  <title>显示器扫码盘点工具 V2</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
   <div class="app">
-    <h1>显示器扫码盘点工具</h1>
-    <p class="hint">用于现场扫描显示器 SN 条形码，并导出 Excel。</p>
+    <h1>显示器扫码盘点工具 V2</h1>
+    <p class="hint">支持扫码，也支持拍照 OCR 自动提取 Dell 型号和 Service Tag。</p>
 
     <section class="card">
-      <label>SN 序列号</label>
-      <div class="row">
-        <input id="sn" placeholder="扫码后自动填入，也可以手动输入" />
-        <button id="scanBtn">扫 SN</button>
+      <div class="actions">
+        <button id="scanBtn">扫 SN / 二维码</button>
+
+        <label class="photoBtn" for="photoInput">拍照识别标签</label>
+        <input id="photoInput" type="file" accept="image/*" capture="environment" />
+      </div>
+
+      <div id="ocrStatus" class="statusText"></div>
+
+      <div id="previewBox" class="previewBox hidden">
+        <img id="previewImg" alt="标签预览" />
       </div>
 
       <div id="scannerBox" class="scanner hidden">
         <div id="reader"></div>
         <button id="stopScanBtn" class="secondary">停止扫码</button>
       </div>
+
+      <label>SN / Service Tag</label>
+      <input id="sn" placeholder="例如 45KYWV3" />
 
       <label>型号</label>
       <input id="model" placeholder="例如 Dell P2422H" />
@@ -46,6 +57,11 @@
       <label>备注</label>
       <textarea id="remark" placeholder="可填写异常情况、缺线、无底座等"></textarea>
 
+      <details class="ocrDetails">
+        <summary>查看 OCR 原始识别文本</summary>
+        <pre id="ocrText"></pre>
+      </details>
+
       <button id="addBtn" class="primary">添加到列表</button>
     </section>
 
@@ -60,7 +76,7 @@
           <thead>
             <tr>
               <th>序号</th>
-              <th>SN序列号</th>
+              <th>SN/Service Tag</th>
               <th>型号</th>
               <th>位置</th>
               <th>使用人</th>
