@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -41,7 +39,7 @@ label {
   font-weight: 600;
 }
 
-input, select, textarea, button, .photoBtn {
+input, select, textarea, button {
   width: 100%;
   font-size: 16px;
   border-radius: 10px;
@@ -58,52 +56,30 @@ textarea {
   resize: vertical;
 }
 
-button, .photoBtn {
+button {
   border: 0;
   padding: 12px;
   margin-top: 12px;
   background: #222;
   color: white;
   font-weight: 700;
-  text-align: center;
-  cursor: pointer;
 }
 
-button:active, .photoBtn:active {
-  transform: scale(0.99);
-}
+button:active { transform: scale(0.99); }
 
-.primary {
-  background: #111;
-}
-
-.secondary {
-  background: #666;
-}
-
-.actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.actions button, .actions .photoBtn {
-  margin-top: 0;
-}
-
-#photoInput {
-  display: none;
-}
+.primary { background: #111; }
+.secondary { background: #666; }
 
 .statusText {
   margin-top: 12px;
   color: #555;
   line-height: 1.5;
+  background: #f7f7f7;
+  padding: 10px;
+  border-radius: 10px;
 }
 
-.previewBox {
-  margin-top: 12px;
-}
+.previewBox { margin-top: 12px; }
 
 .previewBox img {
   width: 100%;
@@ -111,13 +87,8 @@ button:active, .photoBtn:active {
   border: 1px solid #eee;
 }
 
-.scanner {
-  margin-top: 12px;
-}
-
-.hidden {
-  display: none;
-}
+.scanner { margin-top: 12px; }
+.hidden { display: none; }
 
 #reader {
   width: 100%;
@@ -146,9 +117,7 @@ pre {
   align-items: center;
 }
 
-.listHeader h2 {
-  margin: 0;
-}
+.listHeader h2 { margin: 0; }
 
 .listHeader button {
   width: 130px;
@@ -173,9 +142,7 @@ th, td {
   white-space: nowrap;
 }
 
-th {
-  background: #fafafa;
-}
+th { background: #fafafa; }
 
 .deleteBtn {
   background: #c0392b;
@@ -184,10 +151,6 @@ th {
 }
 
 @media (max-width: 640px) {
-  .actions {
-    grid-template-columns: 1fr;
-  }
-
   .listHeader {
     align-items: stretch;
     flex-direction: column;

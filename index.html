@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>显示器扫码盘点工具 V2</title>
+  <title>显示器扫码盘点工具 V2.1</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/html5-qrcode" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
@@ -12,18 +12,17 @@
 </head>
 <body>
   <div class="app">
-    <h1>显示器扫码盘点工具 V2</h1>
+    <h1>显示器扫码盘点工具 V2.1</h1>
     <p class="hint">支持扫码，也支持拍照 OCR 自动提取 Dell 型号和 Service Tag。</p>
 
     <section class="card">
-      <div class="actions">
-        <button id="scanBtn">扫 SN / 二维码</button>
+      <button id="scanBtn">扫 SN / 二维码</button>
 
-        <label class="photoBtn" for="photoInput">拍照识别标签</label>
-        <input id="photoInput" type="file" accept="image/*" capture="environment" />
-      </div>
+      <label>拍照识别标签</label>
+      <input id="photoInput" type="file" accept="image/*" capture="environment" />
+      <button id="ocrBtn" class="secondary">开始 OCR 识别</button>
 
-      <div id="ocrStatus" class="statusText"></div>
+      <div id="ocrStatus" class="statusText">请先拍照或选择图片，然后点击“开始 OCR 识别”。</div>
 
       <div id="previewBox" class="previewBox hidden">
         <img id="previewImg" alt="标签预览" />

@@ -1,5 +1,6 @@
 let inventory = [];
 let scanner = null;
+let selectedPhotoFile = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -30,7 +31,6 @@ function extractInfo(rawText) {
   const text = normalizeText(rawText);
   const upper = text.toUpperCase();
 
-  // 常见 Dell 型号：P2422H、P2419H、U2722D、E2420H、S2721QS 等
   const modelPatterns = [
     /\b([PUES][0-9]{4}[A-Z]{0,3})\b/i,
     /MODEL\s*[:：]?\s*([A-Z0-9-]{4,20})/i,
@@ -46,7 +46,6 @@ function extractInfo(rawText) {
     }
   }
 
-  // Dell Service Tag 通常 7 位字母数字；优先匹配 Service Tag 后面的内容
   const serviceTagPatterns = [
     /SERVICE\s*TAG\s*[:：]?\s*([A-Z0-9]{5,10})/i,
     /SVC\s*TAG\s*[:：]?\s*([A-Z0-9]{5,10})/i,
@@ -62,11 +61,9 @@ function extractInfo(rawText) {
     }
   }
 
-  // 如果没识别出 Service Tag，就从全部文本里找一个像 Dell Service Tag 的 7 位码
   if (!serviceTag) {
     const candidates = upper.match(/\b[A-Z0-9]{7}\b/g) || [];
-    const blacklist = new Set(["P2422H", "P2419H", "U2722D", "E2420H"]);
-    serviceTag = candidates.find(x => !blacklist.has(x)) || "";
+    serviceTag = candidates.find(x => !x.match(/^[PUES][0-9]{4}[A-Z]{0,3}$/)) || "";
   }
 
   return { model, serviceTag };
@@ -77,13 +74,8 @@ function fillFromText(rawText) {
 
   const info = extractInfo(rawText);
 
-  if (info.serviceTag) {
-    $("sn").value = info.serviceTag;
-  }
-
-  if (info.model) {
-    $("model").value = info.model;
-  }
+  if (info.serviceTag) $("sn").value = info.serviceTag;
+  if (info.model) $("model").value = info.model;
 
   const found = [];
   if (info.serviceTag) found.push(`SN/Service Tag：${info.serviceTag}`);
@@ -132,23 +124,20 @@ function clearForm() {
   $("status").value = "在用";
   $("remark").value = "";
   $("ocrText").textContent = "";
-  $("ocrStatus").textContent = "";
+  $("ocrStatus").textContent = "请先拍照或选择图片，然后点击“开始 OCR 识别”。";
   $("previewBox").classList.add("hidden");
   $("previewImg").removeAttribute("src");
+  selectedPhotoFile = null;
 }
 
 function saveLocal() {
-  localStorage.setItem("monitor_inventory_v2", JSON.stringify(inventory));
+  localStorage.setItem("monitor_inventory_v21", JSON.stringify(inventory));
 }
 
 function loadLocal() {
-  const saved = localStorage.getItem("monitor_inventory_v2");
+  const saved = localStorage.getItem("monitor_inventory_v21");
   if (saved) {
-    try {
-      inventory = JSON.parse(saved);
-    } catch {
-      inventory = [];
-    }
+    try { inventory = JSON.parse(saved); } catch { inventory = []; }
   }
   renderTable();
 }
@@ -206,29 +195,43 @@ async function stopScan() {
   $("scannerBox").classList.add("hidden");
 }
 
-async function handlePhoto(file) {
+function selectPhoto(file) {
   if (!file) return;
-
-  if (!window.Tesseract) {
-    alert("OCR 组件还没加载完成，请等几秒再试。");
-    return;
-  }
+  selectedPhotoFile = file;
 
   const imageUrl = URL.createObjectURL(file);
   $("previewImg").src = imageUrl;
   $("previewBox").classList.remove("hidden");
-  $("ocrStatus").textContent = "正在识别图片文字，手机上可能需要 5~20 秒，请稍等……";
   $("ocrText").textContent = "";
+  $("ocrStatus").textContent = "图片已选择。现在点击“开始 OCR 识别”。";
+}
+
+async function runOCR() {
+  if (!selectedPhotoFile) {
+    alert("请先拍照或选择一张标签图片。");
+    return;
+  }
+
+  $("ocrStatus").textContent = "正在加载 OCR 组件……第一次可能比较慢。";
+
+  if (!window.Tesseract) {
+    $("ocrStatus").textContent = "OCR 组件加载失败。请检查网络，刷新页面后再试。";
+    return;
+  }
 
   try {
+    $("ocrStatus").textContent = "正在识别图片文字，手机上可能需要 5~30 秒，请稍等……";
+
     const result = await Tesseract.recognize(
-      file,
+      selectedPhotoFile,
       "eng",
       {
         logger: (m) => {
           if (m.status === "recognizing text") {
             const progress = Math.round((m.progress || 0) * 100);
             $("ocrStatus").textContent = `正在 OCR 识别：${progress}%`;
+          } else if (m.status) {
+            $("ocrStatus").textContent = `OCR 状态：${m.status}`;
           }
         }
       }
@@ -243,7 +246,6 @@ async function handlePhoto(file) {
 
 function addItem() {
   const sn = $("sn").value.trim();
-
   if (!sn) {
     alert("请先填写、扫码或拍照识别 SN / Service Tag。");
     return;
@@ -297,10 +299,10 @@ window.addEventListener("DOMContentLoaded", () => {
   $("stopScanBtn").addEventListener("click", stopScan);
   $("addBtn").addEventListener("click", addItem);
   $("exportBtn").addEventListener("click", exportExcel);
+  $("ocrBtn").addEventListener("click", runOCR);
 
   $("photoInput").addEventListener("change", (event) => {
     const file = event.target.files && event.target.files[0];
-    handlePhoto(file);
-    event.target.value = "";
+    selectPhoto(file);
   });
 });
