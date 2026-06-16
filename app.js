@@ -10,6 +10,19 @@ function getNowText() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
+function getDateText() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function safeFileName(name) {
+  return String(name || "资产盘点")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "_")
+    .replace(/\s+/g, "_") || "资产盘点";
+}
+
 function escapeHtml(text) {
   return String(text || "")
     .replaceAll("&", "&amp;")
@@ -32,58 +45,60 @@ function extractInfo(rawText) {
   const upper = text.toUpperCase();
 
   const modelPatterns = [
+    /(GPD\s*POCKET\s*[0-9A-Z]+)/i,
     /\b([PUES][0-9]{4}[A-Z]{0,3})\b/i,
-    /MODEL\s*[:：]?\s*([A-Z0-9-]{4,20})/i,
-    /型号\s*[:：]?\s*([A-Z0-9-]{4,20})/i
+    /MODEL\s*[:：]?\s*([A-Z0-9-]{4,30})/i,
+    /型号\s*[:：]?\s*([A-Z0-9-]{4,30})/i
   ];
 
   let model = "";
   for (const pattern of modelPatterns) {
     const match = text.match(pattern);
     if (match) {
-      model = match[1].toUpperCase();
+      model = match[1].replace(/\s+/g, " ").trim();
       break;
     }
   }
 
   const serviceTagPatterns = [
-    /SERVICE\s*TAG\s*[:：]?\s*([A-Z0-9]{5,10})/i,
-    /SVC\s*TAG\s*[:：]?\s*([A-Z0-9]{5,10})/i,
-    /服务标签\s*[:：]?\s*([A-Z0-9]{5,10})/i
+    /SERVICE\s*TAG\s*[:：]?\s*([A-Z0-9]{5,25})/i,
+    /SVC\s*TAG\s*[:：]?\s*([A-Z0-9]{5,25})/i,
+    /S\/N\s*[:：]?\s*([A-Z0-9-]{5,35})/i,
+    /SN\s*[:：]?\s*([A-Z0-9-]{5,35})/i,
+    /序列号\s*[:：]?\s*([A-Z0-9-]{5,35})/i
   ];
 
-  let serviceTag = "";
+  let sn = "";
   for (const pattern of serviceTagPatterns) {
     const match = upper.match(pattern);
     if (match) {
-      serviceTag = match[1].toUpperCase();
+      sn = match[1].replace(/-/g, "").toUpperCase();
       break;
     }
   }
 
-  if (!serviceTag) {
-    const candidates = upper.match(/\b[A-Z0-9]{7}\b/g) || [];
-    serviceTag = candidates.find(x => !x.match(/^[PUES][0-9]{4}[A-Z]{0,3}$/)) || "";
+  if (!sn) {
+    const candidates = upper.match(/\b[A-Z0-9]{7,30}\b/g) || [];
+    sn = candidates.find(x => !x.match(/^[PUES][0-9]{4}[A-Z]{0,3}$/) && !x.includes("POCKET")) || "";
   }
 
-  return { model, serviceTag };
+  return { model, sn };
 }
 
 function fillFromText(rawText) {
   $("ocrText").textContent = rawText || "";
-
   const info = extractInfo(rawText);
 
-  if (info.serviceTag) $("sn").value = info.serviceTag;
+  if (info.sn) $("sn").value = info.sn;
   if (info.model) $("model").value = info.model;
 
   const found = [];
-  if (info.serviceTag) found.push(`SN/Service Tag：${info.serviceTag}`);
+  if (info.sn) found.push(`SN：${info.sn}`);
   if (info.model) found.push(`型号：${info.model}`);
 
   $("ocrStatus").textContent = found.length
     ? "识别完成，已自动填写：" + found.join("，")
-    : "识别完成，但没有自动提取到型号或 Service Tag。可以点开原始文本手动复制。";
+    : "识别完成，但没有自动提取到型号或 SN。可以点开原始文本手动复制。";
 }
 
 function renderTable() {
@@ -131,11 +146,15 @@ function clearForm() {
 }
 
 function saveLocal() {
-  localStorage.setItem("monitor_inventory_v21", JSON.stringify(inventory));
+  localStorage.setItem("asset_inventory_v22", JSON.stringify(inventory));
+  localStorage.setItem("asset_inventory_filename_v22", $("fileName").value || "资产盘点");
 }
 
 function loadLocal() {
-  const saved = localStorage.getItem("monitor_inventory_v21");
+  const savedName = localStorage.getItem("asset_inventory_filename_v22");
+  if (savedName) $("fileName").value = savedName;
+
+  const saved = localStorage.getItem("asset_inventory_v22");
   if (saved) {
     try { inventory = JSON.parse(saved); } catch { inventory = []; }
   }
@@ -247,7 +266,7 @@ async function runOCR() {
 function addItem() {
   const sn = $("sn").value.trim();
   if (!sn) {
-    alert("请先填写、扫码或拍照识别 SN / Service Tag。");
+    alert("请先填写、扫码或拍照识别 SN 序列号。");
     return;
   }
 
@@ -269,13 +288,13 @@ function addItem() {
 
 function exportExcel() {
   if (inventory.length === 0) {
-    alert("还没有录入任何显示器。");
+    alert("还没有录入任何资产。");
     return;
   }
 
   const rows = inventory.map((item, index) => ({
     "序号": index + 1,
-    "SN/Service Tag": item.sn,
+    "SN序列号": item.sn,
     "型号": item.model,
     "位置": item.location,
     "使用人": item.user,
@@ -286,15 +305,18 @@ function exportExcel() {
 
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "显示器盘点");
 
-  const date = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(workbook, `显示器盘点_${date}.xlsx`);
+  const sheetName = safeFileName($("fileName").value).slice(0, 31);
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+  const fileName = `${safeFileName($("fileName").value)}_${getDateText()}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
 }
 
 window.addEventListener("DOMContentLoaded", () => {
   loadLocal();
 
+  $("fileName").addEventListener("input", saveLocal);
   $("scanBtn").addEventListener("click", startScan);
   $("stopScanBtn").addEventListener("click", stopScan);
   $("addBtn").addEventListener("click", addItem);

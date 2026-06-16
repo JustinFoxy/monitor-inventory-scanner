@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>显示器扫码盘点工具 V2.1</title>
+  <title>资产扫码盘点工具 V2.2</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/html5-qrcode" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
@@ -12,11 +12,14 @@
 </head>
 <body>
   <div class="app">
-    <h1>显示器扫码盘点工具 V2.1</h1>
-    <p class="hint">支持扫码，也支持拍照 OCR 自动提取 Dell 型号和 Service Tag。</p>
+    <h1>资产扫码盘点工具 V2.2</h1>
+    <p class="hint">支持扫码、拍照 OCR、自动填 SN，并可自定义导出的 Excel 文件名。</p>
 
     <section class="card">
-      <button id="scanBtn">扫 SN / 二维码</button>
+      <label>Excel 文件名 / 资产类型</label>
+      <input id="fileName" placeholder="例如 显示器盘点 / 打印机盘点 / 电脑盘点" value="显示器盘点" />
+
+      <button id="scanBtn">扫 SN / 二维码 / 条形码</button>
 
       <label>拍照识别标签</label>
       <input id="photoInput" type="file" accept="image/*" capture="environment" />
@@ -33,11 +36,11 @@
         <button id="stopScanBtn" class="secondary">停止扫码</button>
       </div>
 
-      <label>SN / Service Tag</label>
-      <input id="sn" placeholder="例如 45KYWV3" />
+      <label>SN 序列号</label>
+      <input id="sn" placeholder="例如 CN02RGCPQDC0037J1SRBA05 / BEJF202291" />
 
       <label>型号</label>
-      <input id="model" placeholder="例如 Dell P2422H" />
+      <input id="model" placeholder="例如 Dell P2422H / GPD Pocket 4" />
 
       <label>位置</label>
       <input id="location" placeholder="例如 财务办公室 / 会议室 / 库房" />
@@ -75,7 +78,7 @@
           <thead>
             <tr>
               <th>序号</th>
-              <th>SN/Service Tag</th>
+              <th>SN序列号</th>
               <th>型号</th>
               <th>位置</th>
               <th>使用人</th>
