@@ -30,6 +30,11 @@
 
       <button id="scanBtn" type="button">开始扫描</button>
 
+      <div id="scannerBox" class="scanner hidden">
+        <div id="reader"></div>
+        <button id="stopScanBtn" class="secondary" type="button">停止扫码</button>
+      </div>
+
       <label>拍照识别标签</label>
       <input id="photoInput" type="file" accept="image/*" capture="environment" />
       <button id="ocrBtn" class="secondary" type="button">开始 OCR 识别</button>
@@ -38,11 +43,6 @@
 
       <div id="previewBox" class="previewBox hidden">
         <img id="previewImg" alt="标签预览" />
-      </div>
-
-      <div id="scannerBox" class="scanner hidden">
-        <div id="reader"></div>
-        <button id="stopScanBtn" class="secondary" type="button">停止扫码</button>
       </div>
 
       <label>SN 序列号</label>

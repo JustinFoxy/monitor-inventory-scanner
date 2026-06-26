@@ -291,6 +291,7 @@ async function startScan() {
   const scanConfig = getScanConfig();
 
   $("scannerBox").classList.remove("hidden");
+  $("scannerBox").scrollIntoView({ behavior: "smooth", block: "nearest" });
   $("scanBtn").disabled = true;
   $("scanBtn").textContent = `正在扫描${scanConfig.label}…`;
 
