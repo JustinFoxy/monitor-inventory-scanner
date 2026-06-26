@@ -80,7 +80,9 @@ function extractInfo(rawText) {
 
   if (!sn) {
     const candidates = upper.match(/\b[A-Z0-9]{7,30}\b/g) || [];
-    sn = candidates.find((x) => !x.match(/^[PUES][0-9]{4}[A-Z]{0,3}$/) && !x.includes("POCKET")) || "";
+    sn = candidates.find(
+      (x) => !x.match(/^[PUES][0-9]{4}[A-Z]{0,3}$/) && !x.includes("POCKET")
+    ) || "";
   }
 
   return { model, sn };
@@ -112,7 +114,8 @@ function setEditMode(index) {
 
   if (isEditing) {
     const item = inventory[index];
-    $("editStatus").textContent = `正在编辑第 ${index + 1} 条：${item.model || "未填写型号"} / ${item.sn}`;
+    $("editStatus").textContent =
+      `正在编辑第 ${index + 1} 条：${item.model || "未填写型号"} / ${item.sn}`;
   } else {
     $("editStatus").textContent = "";
   }
@@ -121,7 +124,8 @@ function setEditMode(index) {
 function resetPhotoAndOcr() {
   $("photoInput").value = "";
   $("ocrText").textContent = "";
-  $("ocrStatus").textContent = "请先拍照或选择图片，然后点击“开始 OCR 识别”。";
+  $("ocrStatus").textContent =
+    "请先拍照或选择图片，然后点击“开始 OCR 识别”。";
   $("previewBox").classList.add("hidden");
   $("previewImg").removeAttribute("src");
   selectedPhotoFile = null;
@@ -133,6 +137,7 @@ function renderTable() {
 
   inventory.forEach((item, index) => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td>${escapeHtml(item.sn)}</td>
@@ -149,20 +154,30 @@ function renderTable() {
         </div>
       </td>
     `;
+
     tbody.appendChild(tr);
   });
 
   document.querySelectorAll(".editBtn").forEach((btn) => {
-    btn.addEventListener("click", () => startEdit(Number(btn.dataset.index)));
+    btn.addEventListener("click", () => {
+      startEdit(Number(btn.dataset.index));
+    });
   });
 
   document.querySelectorAll(".deleteBtn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const index = Number(btn.dataset.index);
       const item = inventory[index];
-      const label = item?.sn ? `SN：${item.sn}` : `第 ${index + 1} 条记录`;
 
-      if (!confirm(`确认删除${label}吗？`)) return;
+      const confirmed = confirm(
+        `确定要删除这条资产记录吗？\n\n` +
+        `SN：${item?.sn || "未填写"}\n` +
+        `型号：${item?.model || "未填写"}\n` +
+        `位置：${item?.location || "未填写"}\n\n` +
+        `删除后无法恢复。`
+      );
+
+      if (!confirmed) return;
 
       inventory.splice(index, 1);
 
@@ -185,6 +200,7 @@ function clearForm() {
   $("user").value = "";
   $("status").value = "在用";
   $("remark").value = "";
+
   resetPhotoAndOcr();
   setEditMode(null);
 }
@@ -199,6 +215,7 @@ function startEdit(index) {
   $("user").value = item.user || "";
   $("status").value = item.status || "在用";
   $("remark").value = item.remark || "";
+
   resetPhotoAndOcr();
   setEditMode(index);
 
@@ -208,7 +225,10 @@ function startEdit(index) {
 
 function saveLocal() {
   localStorage.setItem("asset_inventory_v22", JSON.stringify(inventory));
-  localStorage.setItem("asset_inventory_filename_v22", $("fileName").value || "资产盘点");
+  localStorage.setItem(
+    "asset_inventory_filename_v22",
+    $("fileName").value || "资产盘点"
+  );
 }
 
 function loadLocal() {
@@ -216,6 +236,7 @@ function loadLocal() {
   if (savedName) $("fileName").value = savedName;
 
   const saved = localStorage.getItem("asset_inventory_v22");
+
   if (saved) {
     try {
       inventory = JSON.parse(saved);
@@ -223,6 +244,7 @@ function loadLocal() {
       inventory = [];
     }
   }
+
   renderTable();
 }
 
@@ -238,7 +260,6 @@ function getScanConfig() {
     };
   }
 
-  // 一维条形码：只启用常用条码格式，减少二维码识别干扰。
   return {
     label: "一维条形码",
     qrbox: { width: 320, height: 150 },
@@ -263,12 +284,12 @@ async function startScan() {
     return;
   }
 
-  // 防止重复点击导致同时启动多个摄像头实例。
   if (scanner) {
     await stopScan();
   }
 
   const scanConfig = getScanConfig();
+
   $("scannerBox").classList.remove("hidden");
   $("scanBtn").disabled = true;
   $("scanBtn").textContent = `正在扫描${scanConfig.label}…`;
@@ -284,12 +305,12 @@ async function startScan() {
         aspectRatio: scanConfig.label === "二维码" ? 1 : 2.1,
         formatsToSupport: scanConfig.formatsToSupport,
         experimentalFeatures: {
-          // Chrome 支持时优先使用系统 BarcodeDetector，通常对一维条形码更友好。
           useBarCodeDetectorIfSupported: true
         }
       },
       async (decodedText) => {
         $("sn").value = decodedText.trim();
+
         await stopScan();
         alert(`${scanConfig.label}扫描成功：${decodedText}`);
       },
@@ -299,7 +320,11 @@ async function startScan() {
     $("scannerBox").classList.add("hidden");
     $("scanBtn").disabled = false;
     $("scanBtn").textContent = "开始扫描";
-    alert("无法打开摄像头或启动扫描。请确认：使用 HTTPS 页面、允许摄像头权限，并在条形码模式下横向对准条码。");
+
+    alert(
+      "无法打开摄像头或启动扫描。请确认：使用 HTTPS 页面、允许摄像头权限，并在条形码模式下横向对准条码。"
+    );
+
     console.error(err);
   }
 }
@@ -312,6 +337,7 @@ async function stopScan() {
     } catch (err) {
       console.warn(err);
     }
+
     scanner = null;
   }
 
@@ -322,13 +348,16 @@ async function stopScan() {
 
 function selectPhoto(file) {
   if (!file) return;
+
   selectedPhotoFile = file;
 
   const imageUrl = URL.createObjectURL(file);
+
   $("previewImg").src = imageUrl;
   $("previewBox").classList.remove("hidden");
   $("ocrText").textContent = "";
-  $("ocrStatus").textContent = "图片已选择。现在点击“开始 OCR 识别”。";
+  $("ocrStatus").textContent =
+    "图片已选择。现在点击“开始 OCR 识别”。";
 }
 
 async function runOCR() {
@@ -337,36 +366,46 @@ async function runOCR() {
     return;
   }
 
-  $("ocrStatus").textContent = "正在加载 OCR 组件……第一次可能比较慢。";
+  $("ocrStatus").textContent =
+    "正在加载 OCR 组件……第一次可能比较慢。";
 
   if (!window.Tesseract) {
-    $("ocrStatus").textContent = "OCR 组件加载失败。请检查网络，刷新页面后再试。";
+    $("ocrStatus").textContent =
+      "OCR 组件加载失败。请检查网络，刷新页面后再试。";
     return;
   }
 
   try {
-    $("ocrStatus").textContent = "正在识别图片文字，手机上可能需要 5~30 秒，请稍等……";
+    $("ocrStatus").textContent =
+      "正在识别图片文字，手机上可能需要 5~30 秒，请稍等……";
 
-    const result = await Tesseract.recognize(selectedPhotoFile, "eng", {
-      logger: (m) => {
-        if (m.status === "recognizing text") {
-          const progress = Math.round((m.progress || 0) * 100);
-          $("ocrStatus").textContent = `正在 OCR 识别：${progress}%`;
-        } else if (m.status) {
-          $("ocrStatus").textContent = `OCR 状态：${m.status}`;
+    const result = await Tesseract.recognize(
+      selectedPhotoFile,
+      "eng",
+      {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            const progress = Math.round((m.progress || 0) * 100);
+            $("ocrStatus").textContent = `正在 OCR 识别：${progress}%`;
+          } else if (m.status) {
+            $("ocrStatus").textContent = `OCR 状态：${m.status}`;
+          }
         }
       }
-    });
+    );
 
     fillFromText(result.data.text);
   } catch (err) {
-    $("ocrStatus").textContent = "OCR 识别失败。建议拍近一点、对焦清楚、标签尽量占满画面。";
+    $("ocrStatus").textContent =
+      "OCR 识别失败。建议拍近一点、对焦清楚、标签尽量占满画面。";
+
     console.error(err);
   }
 }
 
 function addItem() {
   const sn = $("sn").value.trim();
+
   if (!sn) {
     alert("请先填写、扫码或拍照识别 SN 序列号。");
     return;
@@ -383,6 +422,7 @@ function addItem() {
 
   if (Number.isInteger(editingIndex)) {
     const original = inventory[editingIndex];
+
     inventory[editingIndex] = {
       ...item,
       time: original.time
@@ -420,9 +460,12 @@ function exportExcel() {
   const workbook = XLSX.utils.book_new();
 
   const sheetName = safeFileName($("fileName").value).slice(0, 31);
+
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
-  const fileName = `${safeFileName($("fileName").value)}_${getDateText()}.xlsx`;
+  const fileName =
+    `${safeFileName($("fileName").value)}_${getDateText()}.xlsx`;
+
   XLSX.writeFile(workbook, fileName);
 }
 
@@ -433,9 +476,11 @@ window.addEventListener("DOMContentLoaded", () => {
   $("fileName").addEventListener("input", saveLocal);
   $("scanBtn").addEventListener("click", startScan);
   $("stopScanBtn").addEventListener("click", stopScan);
+
   $("scanMode").addEventListener("change", async () => {
     if (scanner) await stopScan();
   });
+
   $("addBtn").addEventListener("click", addItem);
   $("cancelEditBtn").addEventListener("click", clearForm);
   $("exportBtn").addEventListener("click", exportExcel);
