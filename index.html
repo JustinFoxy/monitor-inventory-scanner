@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>资产扫码盘点工具 V2.2</title>
+  <title>资产扫码盘点工具 V2.4</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/html5-qrcode" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
@@ -12,18 +12,27 @@
 </head>
 <body>
   <div class="app">
-    <h1>资产扫码盘点工具 V2.2</h1>
-    <p class="hint">支持扫码、拍照 OCR、自动填 SN，并可自定义导出的 Excel 文件名。</p>
+    <h1>资产扫码盘点工具 V2.4</h1>
+    <p class="hint">支持二维码或一维条形码扫描、拍照 OCR、自动填 SN、编辑已录入记录，并可自定义导出的 Excel 文件名。</p>
 
     <section class="card">
+      <div id="editStatus" class="editStatus hidden" aria-live="polite"></div>
+
       <label>Excel 文件名 / 资产类型</label>
       <input id="fileName" placeholder="例如 显示器盘点 / 打印机盘点 / 电脑盘点" value="显示器盘点" />
 
-      <button id="scanBtn">扫 SN / 二维码 / 条形码</button>
+      <label>扫描类型</label>
+      <select id="scanMode">
+        <option value="qr">二维码</option>
+        <option value="barcode">一维条形码（Code 128 / Code 39 / EAN / UPC 等）</option>
+      </select>
+      <p class="scanTip">条形码模式请将条码横向对准取景框，靠近一些并保持光线充足。</p>
+
+      <button id="scanBtn" type="button">开始扫描</button>
 
       <label>拍照识别标签</label>
       <input id="photoInput" type="file" accept="image/*" capture="environment" />
-      <button id="ocrBtn" class="secondary">开始 OCR 识别</button>
+      <button id="ocrBtn" class="secondary" type="button">开始 OCR 识别</button>
 
       <div id="ocrStatus" class="statusText">请先拍照或选择图片，然后点击“开始 OCR 识别”。</div>
 
@@ -33,7 +42,7 @@
 
       <div id="scannerBox" class="scanner hidden">
         <div id="reader"></div>
-        <button id="stopScanBtn" class="secondary">停止扫码</button>
+        <button id="stopScanBtn" class="secondary" type="button">停止扫码</button>
       </div>
 
       <label>SN 序列号</label>
@@ -64,13 +73,16 @@
         <pre id="ocrText"></pre>
       </details>
 
-      <button id="addBtn" class="primary">添加到列表</button>
+      <div class="formActions">
+        <button id="addBtn" class="primary" type="button">添加到列表</button>
+        <button id="cancelEditBtn" class="secondary hidden" type="button">取消编辑</button>
+      </div>
     </section>
 
     <section class="card">
       <div class="listHeader">
         <h2>已录入列表</h2>
-        <button id="exportBtn">导出 Excel</button>
+        <button id="exportBtn" type="button">导出 Excel</button>
       </div>
 
       <div class="tableWrap">

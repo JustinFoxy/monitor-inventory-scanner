@@ -24,6 +24,13 @@ h1 {
   line-height: 1.5;
 }
 
+.scanTip {
+  margin: 8px 0 0;
+  color: #777;
+  line-height: 1.45;
+  font-size: 14px;
+}
+
 .card {
   background: white;
   border-radius: 14px;
@@ -63,12 +70,24 @@ button {
   background: #222;
   color: white;
   font-weight: 700;
+  cursor: pointer;
 }
 
 button:active { transform: scale(0.99); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .primary { background: #111; }
 .secondary { background: #666; }
+
+.editStatus {
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: #fff7e6;
+  color: #7a4b00;
+  font-weight: 600;
+  line-height: 1.45;
+}
 
 .statusText {
   margin-top: 12px;
@@ -88,7 +107,7 @@ button:active { transform: scale(0.99); }
 }
 
 .scanner { margin-top: 12px; }
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 #reader {
   width: 100%;
@@ -108,6 +127,15 @@ pre {
   border-radius: 10px;
   max-height: 180px;
   overflow: auto;
+}
+
+.formActions {
+  display: flex;
+  gap: 10px;
+}
+
+.formActions button {
+  flex: 1;
 }
 
 .listHeader {
@@ -132,7 +160,7 @@ pre {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 970px;
 }
 
 th, td {
@@ -140,15 +168,25 @@ th, td {
   padding: 10px;
   text-align: left;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 th { background: #fafafa; }
 
-.deleteBtn {
-  background: #c0392b;
-  padding: 8px;
-  margin: 0;
+.rowActions {
+  display: flex;
+  gap: 6px;
 }
+
+.rowActions button {
+  width: auto;
+  padding: 8px 10px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.editBtn { background: #2563eb; }
+.deleteBtn { background: #c0392b; }
 
 @media (max-width: 640px) {
   .listHeader {
@@ -158,5 +196,9 @@ th { background: #fafafa; }
 
   .listHeader button {
     width: 100%;
+  }
+
+  .formActions {
+    flex-direction: column;
   }
 }
