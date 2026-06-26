@@ -30,7 +30,7 @@ https://你的GitHub用户名.github.io/你的仓库名/
 例如：
 
 ```text
-https://justinfoxy.github.io/monitor-inventory-scanner/
+https://justinfoxy.github.io/Asset-Inventory/
 ```
 
 ### iPhone：添加到主屏幕
